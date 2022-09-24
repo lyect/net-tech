@@ -23,6 +23,8 @@ public class CopyDetector {
 	private int nonce;
 	private final int KEY = 228;
 	
+	private final int OUTDATING_SECONDS = 10;
+	
 	public CopyDetector(String _multicastAddressString) throws IOException {
 		multicastAddressString = _multicastAddressString;
 		
@@ -51,8 +53,8 @@ public class CopyDetector {
 		
 		nonce = (int) (Math.random() * 100);
 		
-		Sender sender = new Sender(multicastSocket, messageQueue);
-		Listener listener = new Listener(multicastSocket, messageQueue, nonce, KEY);
+		Sender sender = new Sender(multicastSocket, messageQueue, nonce, OUTDATING_SECONDS / 2);
+		Listener listener = new Listener(multicastSocket, messageQueue, nonce, KEY, OUTDATING_SECONDS);
 		
 		senderThread = new Thread(sender);
 		listenerThread = new Thread(listener);
