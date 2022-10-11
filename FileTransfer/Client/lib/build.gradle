@@ -1,0 +1,18 @@
+plugins {
+    id 'java-library'
+}
+
+jar {
+	manifest {
+		attributes (
+			'Main-Class': 'client.Main'
+		)
+	}
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+}
