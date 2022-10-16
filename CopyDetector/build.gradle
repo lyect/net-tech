@@ -1,0 +1,21 @@
+plugins {
+    id 'java'
+}
+
+group 'org.lyect'
+version '2.1'
+
+jar {
+    manifest {
+        attributes (
+                'Main-Class': 'copydetector.Main'
+        )
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+}
