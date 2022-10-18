@@ -32,7 +32,13 @@ public class Main {
         }
 
         // Get port on which server will listen
-        PORT = Integer.parseInt(args[0]);
+        try {
+            PORT = Integer.parseInt(args[0]);
+        } catch (Exception e) {
+            System.out.println("Incorrect port!");
+            return;
+        }
+
         // Get logger for class "Main"
         LOGGER = Logger.getLogger(Main.class.getName());
 

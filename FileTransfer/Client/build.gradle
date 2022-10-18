@@ -6,10 +6,17 @@ group 'org.lyect'
 version '1.1'
 
 jar {
+
+    duplicatesStrategy(DuplicatesStrategy.EXCLUDE)
+
     manifest {
         attributes (
                 'Main-Class': 'client.Main'
         )
+    }
+
+    from {
+        configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
     }
 }
 
@@ -18,4 +25,6 @@ repositories {
 }
 
 dependencies {
+    implementation group: 'org.apache.commons', name: 'commons-lang3', version: '3.0'
+    implementation group: 'commons-validator', name: 'commons-validator', version: '1.7'
 }
