@@ -13,7 +13,6 @@ import java.net.InetAddress;
 import java.net.Socket;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class ClientRunnable implements Runnable {
@@ -48,7 +47,7 @@ public class ClientRunnable implements Runnable {
     }
 
     public void close(){
-        LOGGER.log(Level.INFO, "Closing connection with server...");
+        LOGGER.info("Closing connection with server...");
 
         int exceptionCount = 0;
 
@@ -56,51 +55,51 @@ public class ClientRunnable implements Runnable {
             readStream.close();
         } catch (IOException ioe) {
             exceptionCount += 1;
-            LOGGER.log(Level.WARNING, "Failed to close read stream properly.");
-            LOGGER.log(Level.WARNING, ioe.getMessage());
+            LOGGER.warning("Failed to close read stream properly.");
+            LOGGER.warning(ioe.getMessage());
         } catch (NullPointerException npe) {
             exceptionCount += 1;
-            LOGGER.log(Level.WARNING, "Closing not opened read stream.");
+            LOGGER.warning("Closing not opened read stream.");
         }
 
         try {
             writeStream.close();
         } catch (IOException ioe) {
             exceptionCount += 1;
-            LOGGER.log(Level.WARNING, "Failed to close write stream properly.");
-            LOGGER.log(Level.WARNING, ioe.getMessage());
+            LOGGER.warning("Failed to close write stream properly.");
+            LOGGER.warning(ioe.getMessage());
         } catch (NullPointerException npe) {
             exceptionCount += 1;
-            LOGGER.log(Level.WARNING, "Closing not opened write stream.");
+            LOGGER.warning("Closing not opened write stream.");
         }
 
         try {
             tcpSocket.close();
         } catch (IOException ioe) {
             exceptionCount += 1;
-            LOGGER.log(Level.WARNING, "Failed to close socket properly.");
-            LOGGER.log(Level.WARNING, ioe.getMessage());
+            LOGGER.warning("Failed to close socket properly.");
+            LOGGER.warning(ioe.getMessage());
         } catch (NullPointerException npe) {
             exceptionCount += 1;
-            LOGGER.log(Level.WARNING, "Closing not opened socket.");
+            LOGGER.warning("Closing not opened socket.");
         }
 
         try {
             fileToSendInputStream.close();
         } catch (IOException ioe) {
             exceptionCount += 1;
-            LOGGER.log(Level.WARNING, "Failed to close file stream properly.");
-            LOGGER.log(Level.WARNING, ioe.getMessage());
+            LOGGER.warning("Failed to close file stream properly.");
+            LOGGER.warning(ioe.getMessage());
         } catch (NullPointerException npe) {
             exceptionCount += 1;
-            LOGGER.log(Level.WARNING, "Closing not opened file stream.");
+            LOGGER.warning("Closing not opened file stream.");
         }
 
         if (exceptionCount == 0) {
-            LOGGER.log(Level.INFO, "Successfully closed connection.");
+            LOGGER.info("Successfully closed connection.");
         }
         else {
-            LOGGER.log(Level.WARNING, "Connection closed with errors.");
+            LOGGER.warning("Connection closed with errors.");
         }
 
         System.out.println("Connection is closed.");
@@ -123,8 +122,8 @@ public class ClientRunnable implements Runnable {
         try {
             writeStream.write(bytes);
         } catch (IOException ioe) {
-            LOGGER.log(Level.SEVERE, "IOException while writing integer.");
-            LOGGER.log(Level.SEVERE, ioe.getMessage());
+            LOGGER.severe("IOException while writing integer.");
+            LOGGER.severe(ioe.getMessage());
             throw new Exception(); // Java-style bad results handling
         }
     }
@@ -135,8 +134,8 @@ public class ClientRunnable implements Runnable {
         try {
             writeStream.write(bytesToWrite);
         } catch (IOException ioe) {
-            LOGGER.log(Level.SEVERE, "IOException while writing bytes.");
-            LOGGER.log(Level.SEVERE, ioe.getMessage());
+            LOGGER.severe("IOException while writing bytes.");
+            LOGGER.severe(ioe.getMessage());
             throw new Exception(); // Java-style bad results handling
         }
     }
@@ -150,11 +149,11 @@ public class ClientRunnable implements Runnable {
         try {
             return readStream.readInt();
         } catch (EOFException eofe) {
-            LOGGER.log(Level.SEVERE, "Failed to read integer, met EOF.");
+            LOGGER.severe("Failed to read integer, met EOF.");
             throw new Exception(); // Java-style bad results handling
         } catch (IOException ioe) {
-            LOGGER.log(Level.SEVERE, "IOException while reading integer.");
-            LOGGER.log(Level.SEVERE, ioe.getMessage());
+            LOGGER.severe("IOException while reading integer.");
+            LOGGER.severe(ioe.getMessage());
             throw new Exception(); // Java-style bad results handling
         }
     }
@@ -168,13 +167,13 @@ public class ClientRunnable implements Runnable {
             writeStream = new DataOutputStream(tcpSocket.getOutputStream());
             readStream = new DataInputStream(tcpSocket.getInputStream());
         } catch (IOException uhe) {
-            LOGGER.log(Level.SEVERE, "Failed to connect to server.");
+            LOGGER.severe("Failed to connect to server.");
             System.out.println("Failed to connect to server.");
             close();
             return;
         }
 
-        LOGGER.log(Level.INFO, "Connected to server.");
+        LOGGER.info("Connected to server.");
         System.out.println("Connected to server.");
 
         // Open file which will be sent
@@ -182,35 +181,35 @@ public class ClientRunnable implements Runnable {
 
         // Check if file exists
         if (!fileToSend.isFile()) {
-            LOGGER.log(Level.SEVERE, "Passed path does not lead to a file.");
+            LOGGER.severe("Passed path does not lead to a file.");
             close();
             return;
         }
 
-        LOGGER.log(Level.INFO, "Opened file with path \"" + fileToSendPath + "\".");
+        LOGGER.info("Opened file with path \"" + fileToSendPath + "\".");
 
         // Open file stream to read from the file
         try {
             fileToSendInputStream = new FileInputStream(fileToSend);
         } catch (FileNotFoundException e) {
-            LOGGER.log(Level.SEVERE, "Failed to open a file stream.");
+            LOGGER.severe("Failed to open a file stream.");
             close();
             return;
         }
 
-        LOGGER.log(Level.INFO, "Opened file stream.");
+        LOGGER.info("Opened file stream.");
 
         // Send file name to the server
         String cleanFileName = cleanupFileName(fileToSendPath);
         try {
             writeString(cleanFileName);
         } catch (Exception e) {
-            LOGGER.log(Level.SEVERE, "Failed to send file name.");
+            LOGGER.severe("Failed to send file name.");
             close();
             return;
         }
 
-        LOGGER.log(Level.INFO, "Sent file name.");
+        LOGGER.info("Sent file name.");
 
         // Server responds with 1 or 2.
         // 1 means that file with same name is stored on server.
@@ -219,18 +218,18 @@ public class ClientRunnable implements Runnable {
         try {
             serverResponse = readInt();
         } catch (Exception e) {
-            LOGGER.log(Level.SEVERE, "Failed to read server response.");
+            LOGGER.severe("Failed to read server response.");
             close();
             return;
         }
 
         if (serverResponse == 0) {
-            LOGGER.log(Level.SEVERE, "Server is down.");
+            LOGGER.severe("Server is down.");
             close();
             return;
         }
 
-        LOGGER.log(Level.INFO, "Got server's response.");
+        LOGGER.info("Got server's response.");
 
         int userAnswerCode = 1;
 
@@ -254,28 +253,28 @@ public class ClientRunnable implements Runnable {
                         System.out.println("Do you want to overwrite it? [Y/N]");
                     }
                 } catch (IOException ioe) {
-                    LOGGER.log(Level.WARNING, "Failed to read line from terminal.");
-                    LOGGER.log(Level.WARNING, ioe.getMessage());
+                    LOGGER.warning("Failed to read line from terminal.");
+                    LOGGER.warning(ioe.getMessage());
                 }
             }
 
             try {
                 terminalReader.close();
             } catch (IOException ioe) {
-                LOGGER.log(Level.WARNING, "Failed to close terminal reader properly.");
-                LOGGER.log(Level.WARNING, ioe.getMessage());
+                LOGGER.warning("Failed to close terminal reader properly.");
+                LOGGER.warning(ioe.getMessage());
             }
         }
 
         try {
             writeInt(userAnswerCode);
         } catch (Exception e) {
-            LOGGER.log(Level.SEVERE, "Failed to send decision");
+            LOGGER.severe("Failed to send decision");
             close();
             return;
         }
 
-        LOGGER.log(Level.INFO, "Sent client's decision.");
+        LOGGER.info("Sent client's decision.");
 
         if (userAnswerCode == 1) {
             byte[] buffer = new byte[bufferSize];
@@ -290,22 +289,22 @@ public class ClientRunnable implements Runnable {
                     try {
                         writeBytes(bytesRead, buffer);
                     } catch (Exception e) {
-                        LOGGER.log(Level.SEVERE, "Failed to send data.");
+                        LOGGER.severe("Failed to send data.");
                         close();
                         return;
                     }
                 } catch (IOException e1) {
-                    LOGGER.log(Level.SEVERE, "Failed to read data from file.");
+                    LOGGER.severe("Failed to read data from file.");
                     close();
                     return;
                 }
             }
 
-            LOGGER.log(Level.INFO, "Successfully sent \"" + cleanFileName + "\".");
+            LOGGER.info("Successfully sent \"" + cleanFileName + "\".");
             System.out.println("Successfully sent \"" + cleanFileName + "\".");
         }
         else {
-            LOGGER.log(Level.INFO, "Client decided not to rewrite file.");
+            LOGGER.info("Client decided not to rewrite file.");
         }
 
         close();

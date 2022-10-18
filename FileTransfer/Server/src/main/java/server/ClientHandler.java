@@ -63,22 +63,22 @@ public class ClientHandler implements Runnable {
                 writeStream = new DataOutputStream(socket.getOutputStream());
                 streamsOpened = true;
             } catch (IOException ioe) {
-                LOGGER.log(Level.SEVERE, makeMessage("Failed to open write stream."));
-                LOGGER.log(Level.SEVERE, ioe.getMessage());
+                LOGGER.severe(makeMessage("Failed to open write stream."));
+                LOGGER.severe(ioe.getMessage());
             }
         } catch (IOException ioe) {
-            LOGGER.log(Level.SEVERE, makeMessage("Failed to open read stream."));
-            LOGGER.log(Level.SEVERE, makeMessage(ioe.getMessage()));
+            LOGGER.severe(makeMessage("Failed to open read stream."));
+            LOGGER.severe(makeMessage(ioe.getMessage()));
         }
 
         if (streamsOpened) {
-            LOGGER.log(Level.INFO, makeMessage("Opened connection"));
+            LOGGER.info(makeMessage("Opened connection"));
             System.out.println("[" + clientAddress + "]: Opened connection.");
         }
     }
 
     private void close() {
-        LOGGER.log(Level.INFO, makeMessage("Closing connection..."));
+        LOGGER.info(makeMessage("Closing connection..."));
 
         int exceptionCount = 0;
 
@@ -86,51 +86,51 @@ public class ClientHandler implements Runnable {
             fileOutputStream.close();
         } catch (IOException ioe) {
             exceptionCount += 1;
-            LOGGER.log(Level.WARNING, makeMessage("Failed to close file stream properly."));
-            LOGGER.log(Level.WARNING, makeMessage(ioe.getMessage()));
+            LOGGER.warning(makeMessage("Failed to close file stream properly."));
+            LOGGER.warning(makeMessage(ioe.getMessage()));
         } catch (NullPointerException npe) {
             exceptionCount += 1;
-            LOGGER.log(Level.WARNING, makeMessage("Closing not opened file stream."));
+            LOGGER.warning(makeMessage("Closing not opened file stream."));
         }
 
         try {
             readStream.close();
         } catch (IOException ioe) {
             exceptionCount += 1;
-            LOGGER.log(Level.WARNING, makeMessage("Failed to close read stream properly."));
-            LOGGER.log(Level.WARNING, makeMessage(ioe.getMessage()));
+            LOGGER.warning(makeMessage("Failed to close read stream properly."));
+            LOGGER.warning(makeMessage(ioe.getMessage()));
         } catch (NullPointerException npe) {
             exceptionCount += 1;
-            LOGGER.log(Level.WARNING, makeMessage("Closing not opened read stream."));
+            LOGGER.warning(makeMessage("Closing not opened read stream."));
         }
 
         try {
             writeStream.close();
         } catch (IOException ioe) {
             exceptionCount += 1;
-            LOGGER.log(Level.WARNING, makeMessage("Failed to close write stream properly."));
-            LOGGER.log(Level.WARNING, makeMessage(ioe.getMessage()));
+            LOGGER.warning(makeMessage("Failed to close write stream properly."));
+            LOGGER.warning(makeMessage(ioe.getMessage()));
         } catch (NullPointerException npe) {
             exceptionCount += 1;
-            LOGGER.log(Level.WARNING, makeMessage("Closing not opened write stream."));
+            LOGGER.warning(makeMessage("Closing not opened write stream."));
         }
 
         try {
             socket.close();
         } catch (IOException ioe) {
             exceptionCount += 1;
-            LOGGER.log(Level.WARNING, makeMessage("Failed to close handler's socket properly."));
-            LOGGER.log(Level.WARNING, makeMessage(ioe.getMessage()));
+            LOGGER.warning(makeMessage("Failed to close handler's socket properly."));
+            LOGGER.warning(makeMessage(ioe.getMessage()));
         } catch (NullPointerException npe) {
             exceptionCount += 1;
-            LOGGER.log(Level.WARNING, makeMessage("Closing not opened socket."));
+            LOGGER.warning(makeMessage("Closing not opened socket."));
         }
 
         if (exceptionCount == 0) {
-            LOGGER.log(Level.INFO, makeMessage("Successfully closed connection."));
+            LOGGER.info(makeMessage("Successfully closed connection."));
         }
         else {
-            LOGGER.log(Level.WARNING, makeMessage("Connection closed with errors."));
+            LOGGER.warning(makeMessage("Connection closed with errors."));
         }
 
         System.out.println("[" + clientAddress + "]: Closed connection.");
@@ -141,11 +141,11 @@ public class ClientHandler implements Runnable {
         try {
             return readStream.readInt();
         } catch (EOFException eofe) {
-            LOGGER.log(Level.SEVERE, makeMessage("Failed to read integer, met EOF."));
+            LOGGER.severe(makeMessage("Failed to read integer, met EOF."));
             throw new Exception(); // Java-style bad results handling
         } catch (IOException ioe) {
-            LOGGER.log(Level.SEVERE, makeMessage("IOException while reading integer."));
-            LOGGER.log(Level.SEVERE, makeMessage(ioe.getMessage()));
+            LOGGER.severe(makeMessage("IOException while reading integer."));
+            LOGGER.severe(makeMessage(ioe.getMessage()));
             throw new Exception(); // Java-style bad results handling
         }
     }
@@ -155,7 +155,7 @@ public class ClientHandler implements Runnable {
         int byteMessageLength = readInt();
 
         if (byteMessageLength == 0) {
-            LOGGER.log(Level.SEVERE, makeMessage("Failed to read string."));
+            LOGGER.severe(makeMessage("Failed to read string."));
             throw new Exception();
         }
 
@@ -164,11 +164,11 @@ public class ClientHandler implements Runnable {
             readStream.readFully(byteMessage);
             return new String(byteMessage, StandardCharsets.UTF_8);
         } catch (EOFException eofe) {
-            LOGGER.log(Level.SEVERE, makeMessage("Failed to read string, met EOF."));
+            LOGGER.severe(makeMessage("Failed to read string, met EOF."));
             throw new Exception(); // Java-style bad results handling
         } catch (IOException ioe) {
-            LOGGER.log(Level.SEVERE, makeMessage("IOException while reading string."));
-            LOGGER.log(Level.SEVERE, makeMessage(ioe.getMessage()));
+            LOGGER.severe(makeMessage("IOException while reading string."));
+            LOGGER.severe(makeMessage(ioe.getMessage()));
             throw new Exception(); // Java-style bad results handling
         }
     }
@@ -178,7 +178,7 @@ public class ClientHandler implements Runnable {
         int byteMessageLength = readInt();
 
         if (byteMessageLength == 0) {
-            LOGGER.log(Level.SEVERE, makeMessage("Failed to read byte array."));
+            LOGGER.severe(makeMessage("Failed to read byte array."));
             throw new Exception();
         }
 
@@ -187,11 +187,11 @@ public class ClientHandler implements Runnable {
             readStream.readFully(byteMessage);
             return byteMessage;
         } catch (EOFException eofe) {
-            LOGGER.log(Level.SEVERE, makeMessage("Failed to read byte array, met EOF."));
+            LOGGER.severe(makeMessage("Failed to read byte array, met EOF."));
             throw new Exception(); // Java-style bad results handling
         } catch (IOException ioe) {
-            LOGGER.log(Level.SEVERE, makeMessage("IOException while reading byte array."));
-            LOGGER.log(Level.SEVERE, makeMessage(ioe.getMessage()));
+            LOGGER.severe(makeMessage("IOException while reading byte array."));
+            LOGGER.severe(makeMessage(ioe.getMessage()));
             throw new Exception(); // Java-style bad results handling
         }
     }
@@ -202,8 +202,8 @@ public class ClientHandler implements Runnable {
         try {
             writeStream.write(bytes);
         } catch (IOException ioe) {
-            LOGGER.log(Level.SEVERE, makeMessage("IOException while writing integer."));
-            LOGGER.log(Level.SEVERE, makeMessage(ioe.getMessage()));
+            LOGGER.severe(makeMessage("IOException while writing integer."));
+            LOGGER.severe(makeMessage(ioe.getMessage()));
             throw new Exception(); // Java-style bad results handling
         }
     }
@@ -265,8 +265,8 @@ public class ClientHandler implements Runnable {
         } catch (NullPointerException npe) {
             // Don't care
         } catch (IOException e) {
-            LOGGER.log(Level.WARNING, makeMessage("Failed to write data into file, file may be corrupted."));
-            LOGGER.log(Level.WARNING, makeMessage(e.getMessage()));
+            LOGGER.warning(makeMessage("Failed to write data into file, file may be corrupted."));
+            LOGGER.warning(makeMessage(e.getMessage()));
         }
     }
 
@@ -276,7 +276,7 @@ public class ClientHandler implements Runnable {
         // If one of the streams (or two of them) is not opened,
         //	then client handler is not able to start
         if (!streamsOpened) {
-            LOGGER.log(Level.SEVERE, makeMessage("Streams are not opened, closing client handler."));
+            LOGGER.severe(makeMessage("Streams are not opened, closing client handler."));
             close();
             return;
         }
@@ -286,14 +286,14 @@ public class ClientHandler implements Runnable {
         try {
             fileName = readString();
         } catch (Exception e) {
-            LOGGER.log(Level.SEVERE, makeMessage("Failed to read initial file data."));
+            LOGGER.severe(makeMessage("Failed to read initial file data."));
             close();
             return;
         }
-        LOGGER.log(Level.INFO, makeMessage("Got file name from client."));
+        LOGGER.info(makeMessage("Got file name from client."));
 
         if (Thread.currentThread().isInterrupted()) {
-            LOGGER.log(Level.INFO, makeMessage("Client handler is interrupted."));
+            LOGGER.info(makeMessage("Client handler is interrupted."));
             close();
             return;
         }
@@ -306,38 +306,38 @@ public class ClientHandler implements Runnable {
         try {
             fileExists = createFile(serverSideFileName);
         } catch (FileNotFoundException fnfe) {
-            LOGGER.log(Level.SEVERE, makeMessage("Failed to open file stream."));
+            LOGGER.severe(makeMessage("Failed to open file stream."));
             close();
             return;
         } catch (IOException ioe) {
-            LOGGER.log(Level.SEVERE, makeMessage("Failed to create file."));
+            LOGGER.severe(makeMessage("Failed to create file."));
             close();
             return;
         }
-        LOGGER.log(Level.INFO, makeMessage("Transformed file name."));
+        LOGGER.info(makeMessage("Transformed file name."));
 
         // File existence code is 1 or 2 because if something goes wrong,
         //	client will read 0 from socket. And 0 means that socket is closed
         //	on the server side.
         int fileExistenceCode = 2;
         if (fileExists) {
-            LOGGER.log(Level.INFO, makeMessage("File with name \"" + fileName + "\" already exists."));
+            LOGGER.info(makeMessage("File with name \"" + fileName + "\" already exists."));
             fileExistenceCode = 1;
         }
-        LOGGER.log(Level.INFO, makeMessage("Opened \"" + serverSideFileName + "\" for writing."));
+        LOGGER.info(makeMessage("Opened \"" + serverSideFileName + "\" for writing."));
 
         // Send code of existence to the client
         try {
             writeInt(fileExistenceCode);
         } catch (Exception e) {
-            LOGGER.log(Level.SEVERE, makeMessage("Failed to write code of file existence."));
+            LOGGER.severe(makeMessage("Failed to write code of file existence."));
             close();
             return;
         }
-        LOGGER.log(Level.INFO, makeMessage("Sent existence code to the client."));
+        LOGGER.info(makeMessage("Sent existence code to the client."));
 
         if (Thread.currentThread().isInterrupted()) {
-            LOGGER.log(Level.INFO, makeMessage("Client handler is interrupted."));
+            LOGGER.info(makeMessage("Client handler is interrupted."));
             close();
             return;
         }
@@ -347,20 +347,20 @@ public class ClientHandler implements Runnable {
         try {
             overwriteFile = readInt();
         } catch (Exception e) {
-            LOGGER.log(Level.SEVERE, makeMessage("Failed to read user's decision."));
+            LOGGER.severe(makeMessage("Failed to read user's decision."));
             close();
             return;
         }
 
         if (overwriteFile == 0) {
-            LOGGER.log(Level.WARNING, makeMessage("Client is down."));
+            LOGGER.warning(makeMessage("Client is down."));
             close();
             return;
         }
-        LOGGER.log(Level.INFO, makeMessage("Got client's decision."));
+        LOGGER.info(makeMessage("Got client's decision."));
 
         if (Thread.currentThread().isInterrupted()) {
-            LOGGER.log(Level.SEVERE, makeMessage("Client handler is interrupted."));
+            LOGGER.severe(makeMessage("Client handler is interrupted."));
             close();
             return;
         }
@@ -386,7 +386,7 @@ public class ClientHandler implements Runnable {
 
             while (true) {
                 if (Thread.currentThread().isInterrupted()) {
-                    LOGGER.log(Level.SEVERE, makeMessage("Client handler is interrupted."));
+                    LOGGER.severe(makeMessage("Client handler is interrupted."));
                     break;
                 }
 
@@ -400,7 +400,7 @@ public class ClientHandler implements Runnable {
                     }
 
                 } catch (Exception e) {
-                    LOGGER.log(Level.SEVERE, makeMessage("Failed to read incoming packet."));
+                    LOGGER.severe(makeMessage("Failed to read incoming packet."));
                     break;
                 }
 
@@ -422,10 +422,10 @@ public class ClientHandler implements Runnable {
             }
             speedManagerThreadExecutor.shutdown();
 
-            LOGGER.log(Level.INFO, makeMessage("File \"" + fileName + "\" has been received."));
+            LOGGER.info(makeMessage("File \"" + fileName + "\" has been received."));
         }
         else if (overwriteFile == 2) { // If received integer is 2, then do nothing
-            LOGGER.log(Level.INFO, makeMessage("Client decided not to overwrite file."));
+            LOGGER.info(makeMessage("Client decided not to overwrite file."));
         }
         else { // If received integer is neither 1 nor 2, then LOGGER.log it and end the connection
             LOGGER.log(Level.SEVERE,

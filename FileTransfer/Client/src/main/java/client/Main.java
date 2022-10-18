@@ -4,7 +4,6 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.util.logging.Level;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
 
@@ -70,8 +69,8 @@ public class Main {
 		clientThread.start();
 		clientThread.join();
 
-		LOGGER.log(Level.INFO, "Closing terminal reader...");
+		LOGGER.info("Closing terminal reader...");
 		terminalReader.close();
-		LOGGER.log(Level.INFO, "Terminal reader is closed.");
+		LOGGER.info("Terminal reader is closed.");
 	}
 }
