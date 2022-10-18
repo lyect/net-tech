@@ -9,7 +9,6 @@ import java.util.logging.Logger;
 
 public class Main {
 
-    private static int PORT;
     private static Logger LOGGER;
 
     private static void setUpLoggerConfiguration() throws SecurityException, IOException {
@@ -30,9 +29,10 @@ public class Main {
             throw new Exception("Too many arguments! There must be only server's listening port.");
         }
 
-        // Get port on which server will listen
+        // Get port which server will listen on
+        int listenPort;
         try {
-            PORT = Integer.parseInt(args[0]);
+            listenPort = Integer.parseInt(args[0]);
         } catch (Exception e) {
             System.out.println("Incorrect port!");
             return;
@@ -42,7 +42,7 @@ public class Main {
         LOGGER = Logger.getLogger(Main.class.getName());
 
         // Start thread with logic of the server
-        Thread serverThread = new Thread(new ServerRunnable(PORT));
+        Thread serverThread = new Thread(new ServerRunnable(listenPort));
         serverThread.start();
 
         // Start busy-waiting of STOP command

@@ -17,296 +17,220 @@ import java.util.logging.Logger;
 
 public class ClientRunnable implements Runnable {
 
-    private final int bufferSize;
+	private final int bufferSize;
 
-    private final String serverAddress;
-    private final int serverPort;
-    private final String fileToSendPath;
-    private FileInputStream fileToSendInputStream;
+	private final String serverAddress;
+	private final int serverPort;
+	private final String fileToSendPath;
 
-    private Socket tcpSocket;
-    private DataOutputStream writeStream;
-    private DataInputStream readStream;
-    private final int localPort;
+	private final int localPort;
 
-    private static Logger LOGGER;
+	private static Logger LOGGER;
 
-    public ClientRunnable(
-            int _bufferSize,
-            String _serverAddress,
-            int _serverPort,
-            int _localPort,
-            String _fileToSendPath
-    ) {
-        LOGGER = Logger.getLogger(ClientRunnable.class.getName());
-        bufferSize = _bufferSize;
-        serverAddress = _serverAddress;
-        serverPort = _serverPort;
-        localPort = _localPort;
-        fileToSendPath = _fileToSendPath;
-    }
+	public ClientRunnable(
+			int _bufferSize,
+			String _serverAddress,
+			int _serverPort,
+			int _localPort,
+			String _fileToSendPath
+	) {
+		LOGGER = Logger.getLogger(ClientRunnable.class.getName());
+		bufferSize = _bufferSize;
+		serverAddress = _serverAddress;
+		serverPort = _serverPort;
+		localPort = _localPort;
+		fileToSendPath = _fileToSendPath;
+	}
 
-    public void close(){
-        LOGGER.info("Closing connection with server...");
+	private String cleanupFileName(String oldFileName) {
+		int lastIndexOfSlash = oldFileName.lastIndexOf('/');
 
-        int exceptionCount = 0;
+		// lastIndexOfSlash is in range from -1 to oldFileName.length - 2
+		// If lastIndexOfSlash is oldFileName.length - 1 then this method
+		//	won't even start.
+		lastIndexOfSlash += 1;
 
-        try {
-            readStream.close();
-        } catch (IOException ioe) {
-            exceptionCount += 1;
-            LOGGER.warning("Failed to close read stream properly.");
-            LOGGER.warning(ioe.getMessage());
-        } catch (NullPointerException npe) {
-            exceptionCount += 1;
-            LOGGER.warning("Closing not opened read stream.");
-        }
+		return oldFileName.substring(lastIndexOfSlash);
+	}
 
-        try {
-            writeStream.close();
-        } catch (IOException ioe) {
-            exceptionCount += 1;
-            LOGGER.warning("Failed to close write stream properly.");
-            LOGGER.warning(ioe.getMessage());
-        } catch (NullPointerException npe) {
-            exceptionCount += 1;
-            LOGGER.warning("Closing not opened write stream.");
-        }
+	private void writeIntToStream(DataOutputStream stream, int intToWrite) throws Exception {
+		byte[] bytes = ByteBuffer.allocate(4).putInt(intToWrite).array();
+		try {
+			stream.write(bytes);
+		} catch (IOException ioe) {
+			LOGGER.severe("IOException while writing integer.");
+			LOGGER.severe(ioe.getMessage());
+			throw new Exception(); // Java-style bad results handling
+		}
+	}
 
-        try {
-            tcpSocket.close();
-        } catch (IOException ioe) {
-            exceptionCount += 1;
-            LOGGER.warning("Failed to close socket properly.");
-            LOGGER.warning(ioe.getMessage());
-        } catch (NullPointerException npe) {
-            exceptionCount += 1;
-            LOGGER.warning("Closing not opened socket.");
-        }
+	private void writeBytesToStream(DataOutputStream stream, int bytesLength, byte[] bytesToWrite) throws Exception {
+		writeIntToStream(stream, bytesLength);
 
-        try {
-            fileToSendInputStream.close();
-        } catch (IOException ioe) {
-            exceptionCount += 1;
-            LOGGER.warning("Failed to close file stream properly.");
-            LOGGER.warning(ioe.getMessage());
-        } catch (NullPointerException npe) {
-            exceptionCount += 1;
-            LOGGER.warning("Closing not opened file stream.");
-        }
+		try {
+			stream.write(bytesToWrite);
+		} catch (IOException ioe) {
+			LOGGER.severe("IOException while writing bytes.");
+			LOGGER.severe(ioe.getMessage());
+			throw new Exception(); // Java-style bad results handling
+		}
+	}
 
-        if (exceptionCount == 0) {
-            LOGGER.info("Successfully closed connection.");
-        }
-        else {
-            LOGGER.warning("Connection closed with errors.");
-        }
+	private void writeStringToStream(DataOutputStream stream, String stringToWrite) throws Exception {
+		byte[] byteString = stringToWrite.getBytes(StandardCharsets.UTF_8);
+		writeBytesToStream(stream, byteString.length, byteString);
+	}
 
-        System.out.println("Connection is closed.");
+	private int readIntFromStream(DataInputStream stream) throws Exception {
+		try {
+			return stream.readInt();
+		} catch (EOFException eofe) {
+			LOGGER.severe("Failed to read integer, met EOF.");
+			throw new Exception(); // Java-style bad results handling
+		} catch (IOException ioe) {
+			LOGGER.severe("IOException while reading integer.");
+			LOGGER.severe(ioe.getMessage());
+			throw new Exception(); // Java-style bad results handling
+		}
+	}
 
-    }
+	@Override
+	public void run() {
 
-    private String cleanupFileName(String oldFileName) {
-        int lastIndexOfSlash = oldFileName.lastIndexOf('/');
+		// Connect to the server and open io streams
+		try (Socket tcpSocket = new Socket(serverAddress, serverPort, InetAddress.getLocalHost(), localPort);
+			 DataOutputStream writeStream = new DataOutputStream(tcpSocket.getOutputStream());
+			 DataInputStream readStream = new DataInputStream(tcpSocket.getInputStream())
+		) {
+			LOGGER.info("Connected to server.");
+			System.out.println("Connected to server.");
 
-        // lastIndexOfSlash is in range from -1 to oldFileName.length - 2
-        // If lastIndexOfSlash is oldFileName.length - 1 then this method
-        //	won't even start.
-        lastIndexOfSlash += 1;
+			// Open file which will be sent
+			File fileToSend = new File(fileToSendPath);
 
-        return oldFileName.substring(lastIndexOfSlash);
-    }
+			// Check if file exists
+			if (!fileToSend.isFile()) {
+				LOGGER.severe("Passed path does not lead to a file.");
+				System.out.println("This file does not exist or it is a directory.");
+				return;
+			}
+			LOGGER.info("Opened file with path \"" + fileToSendPath + "\".");
 
-    private void writeInt(int intToWrite) throws Exception {
-        byte[] bytes = ByteBuffer.allocate(4).putInt(intToWrite).array();
-        try {
-            writeStream.write(bytes);
-        } catch (IOException ioe) {
-            LOGGER.severe("IOException while writing integer.");
-            LOGGER.severe(ioe.getMessage());
-            throw new Exception(); // Java-style bad results handling
-        }
-    }
+			// Send file name to the server
+			String cleanFileName = cleanupFileName(fileToSendPath);
+			try {
+				writeStringToStream(writeStream, cleanFileName);
+			} catch (Exception e) {
+				LOGGER.severe("Failed to send file name.");
+				return;
+			}
+			LOGGER.info("Sent file name.");
 
-    private void writeBytes(int bytesLength, byte[] bytesToWrite) throws Exception {
-        writeInt(bytesLength);
+			// After receiving file name, server responds with 1 or 2.
+			// 1 means that file with same name is stored on server.
+			// 2 means that server has no file with this name.
+			int serverResponse;
+			try {
+				serverResponse = readIntFromStream(readStream);
 
-        try {
-            writeStream.write(bytesToWrite);
-        } catch (IOException ioe) {
-            LOGGER.severe("IOException while writing bytes.");
-            LOGGER.severe(ioe.getMessage());
-            throw new Exception(); // Java-style bad results handling
-        }
-    }
+				// If server is down, 0 will be read from input stream
+				if (serverResponse == 0) {
+					LOGGER.severe("Server is down.");
+					return;
+				}
+			} catch (Exception e) {
+				LOGGER.severe("Failed to read server response.");
+				return;
+			}
+			LOGGER.info("Got server's response.");
 
-    private void writeString(String stringToWrite) throws Exception {
-        byte[] byteString = stringToWrite.getBytes(StandardCharsets.UTF_8);
-        writeBytes(byteString.length, byteString);
-    }
+			// userAnswerCode = 1 means that user want to send file to server.
+			//	If server has file with the same name on its side,
+			//	that file will be overwritten.
+			// userAnswerCode = 2 means that user do not want to overwrite old file
+			int userAnswerCode = 1;
 
-    private int readInt() throws Exception {
-        try {
-            return readStream.readInt();
-        } catch (EOFException eofe) {
-            LOGGER.severe("Failed to read integer, met EOF.");
-            throw new Exception(); // Java-style bad results handling
-        } catch (IOException ioe) {
-            LOGGER.severe("IOException while reading integer.");
-            LOGGER.severe(ioe.getMessage());
-            throw new Exception(); // Java-style bad results handling
-        }
-    }
+			// Case if server has file with the same name
+			if (serverResponse == 1) {
+				System.out.println("There is a file with the same name on the server.");
+				System.out.println("Do you want to overwrite it? [Y/N]");
 
-    @Override
-    public void run() {
+				try (InputStreamReader systemInReader = new InputStreamReader(System.in);
+					 BufferedReader terminalReader = new BufferedReader(systemInReader)
+				) {
+					while (true) {
+						String userAnswerString = terminalReader.readLine();
 
-        // Connect to the server and open io streams
-        try {
-            tcpSocket = new Socket(serverAddress, serverPort, InetAddress.getLocalHost(), localPort);
-            writeStream = new DataOutputStream(tcpSocket.getOutputStream());
-            readStream = new DataInputStream(tcpSocket.getInputStream());
-        } catch (IOException uhe) {
-            LOGGER.severe("Failed to connect to server.");
-            System.out.println("Failed to connect to server.");
-            close();
-            return;
-        }
+						if (userAnswerString.equals("Y")) {
+							break;
+						}
+						else if (userAnswerString.equals("N")) {
+							userAnswerCode = 2;
+							break;
+						}
+						else {
+							System.out.println("Do you want to overwrite it? [Y/N]");
+						}
+					}
+				} catch (IOException ioe) {
+					LOGGER.warning("Catch exception while reading from terminal.");
+					LOGGER.warning(ioe.getMessage());
+					return;
+				}
+			}
 
-        LOGGER.info("Connected to server.");
-        System.out.println("Connected to server.");
+			// Send user decision to the server
+			try {
+				writeIntToStream(writeStream, userAnswerCode);
+			} catch (Exception e) {
+				LOGGER.severe("Failed to send decision");
+				return;
+			}
+			LOGGER.info("Sent client's decision.");
 
-        // Open file which will be sent
-        File fileToSend = new File(fileToSendPath);
+			// If user want to overwrite old file (or send new one)
+			if (userAnswerCode == 1) {
+				byte[] buffer = new byte[bufferSize];
+				int bytesRead;
 
-        // Check if file exists
-        if (!fileToSend.isFile()) {
-            LOGGER.severe("Passed path does not lead to a file.");
-            close();
-            return;
-        }
+				try (FileInputStream fileToSendInputStream = new FileInputStream(fileToSend)) {
+					LOGGER.info("Opened file stream.");
 
-        LOGGER.info("Opened file with path \"" + fileToSendPath + "\".");
+					while (true) {
+						// Read new chunk of file
+						bytesRead = fileToSendInputStream.read(buffer);
+						if (bytesRead <= 0) {
+							break;
+						}
+						// Send chunk to server
+						try {
+							writeBytesToStream(writeStream, bytesRead, buffer);
+						} catch (Exception e) {
+							LOGGER.severe("Failed to send data.");
+							return;
+						}
+					}
+				} catch (FileNotFoundException e){
+					LOGGER.severe("File not found.");
+					return;
+				} catch (IOException e1) {
+					LOGGER.severe("Failed to read data from file.");
+					return;
+				}
 
-        // Open file stream to read from the file
-        try {
-            fileToSendInputStream = new FileInputStream(fileToSend);
-        } catch (FileNotFoundException e) {
-            LOGGER.severe("Failed to open a file stream.");
-            close();
-            return;
-        }
-
-        LOGGER.info("Opened file stream.");
-
-        // Send file name to the server
-        String cleanFileName = cleanupFileName(fileToSendPath);
-        try {
-            writeString(cleanFileName);
-        } catch (Exception e) {
-            LOGGER.severe("Failed to send file name.");
-            close();
-            return;
-        }
-
-        LOGGER.info("Sent file name.");
-
-        // Server responds with 1 or 2.
-        // 1 means that file with same name is stored on server.
-        // 2 means that server has no file with this name.
-        int serverResponse;
-        try {
-            serverResponse = readInt();
-        } catch (Exception e) {
-            LOGGER.severe("Failed to read server response.");
-            close();
-            return;
-        }
-
-        if (serverResponse == 0) {
-            LOGGER.severe("Server is down.");
-            close();
-            return;
-        }
-
-        LOGGER.info("Got server's response.");
-
-        int userAnswerCode = 1;
-
-        if (serverResponse == 1) {
-            System.out.println("There is a file with the same name on the server.");
-            System.out.println("Do you want to overwrite it? [Y/N]");
-
-            BufferedReader terminalReader = new BufferedReader(new InputStreamReader(System.in));
-            while (true) {
-                try {
-                    String userAnswerString = terminalReader.readLine();
-
-                    if (userAnswerString.equals("Y")) {
-                        break;
-                    }
-                    else if (userAnswerString.equals("N")) {
-                        userAnswerCode = 2;
-                        break;
-                    }
-                    else {
-                        System.out.println("Do you want to overwrite it? [Y/N]");
-                    }
-                } catch (IOException ioe) {
-                    LOGGER.warning("Failed to read line from terminal.");
-                    LOGGER.warning(ioe.getMessage());
-                }
-            }
-
-            try {
-                terminalReader.close();
-            } catch (IOException ioe) {
-                LOGGER.warning("Failed to close terminal reader properly.");
-                LOGGER.warning(ioe.getMessage());
-            }
-        }
-
-        try {
-            writeInt(userAnswerCode);
-        } catch (Exception e) {
-            LOGGER.severe("Failed to send decision");
-            close();
-            return;
-        }
-
-        LOGGER.info("Sent client's decision.");
-
-        if (userAnswerCode == 1) {
-            byte[] buffer = new byte[bufferSize];
-            int bytesRead;
-
-            while (true) {
-                try {
-                    bytesRead = fileToSendInputStream.read(buffer);
-                    if (bytesRead <= 0) {
-                        break;
-                    }
-                    try {
-                        writeBytes(bytesRead, buffer);
-                    } catch (Exception e) {
-                        LOGGER.severe("Failed to send data.");
-                        close();
-                        return;
-                    }
-                } catch (IOException e1) {
-                    LOGGER.severe("Failed to read data from file.");
-                    close();
-                    return;
-                }
-            }
-
-            LOGGER.info("Successfully sent \"" + cleanFileName + "\".");
-            System.out.println("Successfully sent \"" + cleanFileName + "\".");
-        }
-        else {
-            LOGGER.info("Client decided not to rewrite file.");
-        }
-
-        close();
-    }
+				LOGGER.info("Successfully sent \"" + cleanFileName + "\".");
+				System.out.println("Successfully sent \"" + cleanFileName + "\".");
+			}
+			else {
+				LOGGER.info("Client decided not to rewrite file.");
+			}
+		} catch (IOException ioe) {
+			LOGGER.severe("Catch exception while opening socket.");
+			LOGGER.severe(ioe.getMessage());
+		}
+		finally {
+			LOGGER.info("Disconnected from the server.");
+			System.out.println("Disconnected from the server.");
+		}
+	}
 }
