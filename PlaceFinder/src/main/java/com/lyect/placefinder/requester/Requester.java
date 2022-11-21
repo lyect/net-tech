@@ -23,7 +23,7 @@ public class Requester {
 	public static CompletableFuture<List<Location>> makeFindLocationRequest(String stringLocation) {
 		String requestURIString = String.format("%s?q=%s&locale=%s&key=%s",
 				FIND_LOCATION_REQUEST_URL,
-				stringLocation,
+				stringLocation.replace(" ", "%20"),
 				"us",
 				KeyUtils.FIND_LOCATION_KEY
 		);
